@@ -6,6 +6,9 @@ import { HeroSection } from './components/HeroSection'
 import { Navbar } from './components/Navbar'
 import { SupportSection } from './components/SupportSection'
 import { ToastItem, ToastStack } from './components/ToastStack'
+import BannerAd from './components/BannerAd'
+import VideoAdModal from './components/VideoAdModal'
+import { canShowVideoAd, markVideoAdShown } from './utils/adHelpers'
 
 type OutputFormat = 'jpeg' | 'png' | 'webp'
 
@@ -70,6 +73,8 @@ function App() {
   const [resultUrl, setResultUrl] = useState<string | null>(null)
   const [error, setError] = useState<string>('')
   const [toasts, setToasts] = useState<ToastItem[]>([])
+  const [showVideoModal, setShowVideoModal] = useState(false)
+  const pendingDownloadRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     const savedTheme = localStorage.getItem(THEME_KEY)
@@ -360,18 +365,39 @@ function App() {
       setError('Please resize an image before downloading.')
       return
     }
+    const attemptDownload = () => {
+      const baseName = sourceFile?.name.replace(/\.[^/.]+$/, '') ?? 'pixelresize'
+      const filename = `${baseName}-${Date.now()}.${formatExtension[format]}`
 
-    const baseName = sourceFile?.name.replace(/\.[^/.]+$/, '') ?? 'pixelresize'
-    const filename = `${baseName}-${Date.now()}.${formatExtension[format]}`
+      const blobUrl = URL.createObjectURL(resultBlob)
+      const anchor = document.createElement('a')
+      anchor.href = blobUrl
+      anchor.download = filename
+      anchor.click()
+      URL.revokeObjectURL(blobUrl)
 
-    const blobUrl = URL.createObjectURL(resultBlob)
-    const anchor = document.createElement('a')
-    anchor.href = blobUrl
-    anchor.download = filename
-    anchor.click()
-    URL.revokeObjectURL(blobUrl)
+      pushToast('success', 'Download started.')
+    }
 
-    pushToast('success', 'Download started.')
+    if (canShowVideoAd()) {
+      // show modal and queue download
+      pendingDownloadRef.current = attemptDownload
+      setShowVideoModal(true)
+    } else {
+      attemptDownload()
+      pushToast('info', 'only 1 video ads in 24hours')
+    }
+  }
+
+  function handleVideoAdComplete() {
+    // mark shown and run pending action
+    markVideoAdShown()
+    setShowVideoModal(false)
+    if (pendingDownloadRef.current) {
+      pendingDownloadRef.current()
+      pendingDownloadRef.current = null
+    }
+    pushToast('info', 'only 1 video ads in 24hours')
   }
 
   return (
@@ -388,6 +414,7 @@ function App() {
       />
 
       <main>
+        <BannerAd />
         <HeroSection
           onGoToWorkspace={() => scrollToSection(workspaceRef)}
           onGoToFeatures={() => scrollToSection(featuresRef)}
@@ -675,6 +702,7 @@ function App() {
       />
 
       <ToastStack toasts={toasts} />
+      <VideoAdModal open={showVideoModal} onClose={() => setShowVideoModal(false)} onComplete={handleVideoAdComplete} />
     </div>
   )
 }
