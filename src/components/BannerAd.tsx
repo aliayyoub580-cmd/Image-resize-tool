@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 declare global {
   interface Window {
@@ -8,23 +8,33 @@ declare global {
 
 const ADSENSE_CLIENT_ID = 'ca-pub-1251232751126138'
 const ADSENSE_BANNER_SLOT_ID = import.meta.env.VITE_ADSENSE_BANNER_SLOT_ID as string | undefined
+const ADSENSE_TEST_MODE = (import.meta.env.VITE_ADSENSE_TEST_MODE as string | undefined) || undefined
 
 export function BannerAd() {
+  const insRef = useRef<HTMLModElement | null>(null)
+  const didPushRef = useRef(false)
+
   useEffect(() => {
-    if (!ADSENSE_BANNER_SLOT_ID) {
+    if (!ADSENSE_BANNER_SLOT_ID || didPushRef.current) {
       return
     }
 
-    try {
-      const adsbygoogle = (globalThis as typeof globalThis & {
-        adsbygoogle?: unknown[]
-      }).adsbygoogle || []
-      ;(globalThis as typeof globalThis & {
-        adsbygoogle?: unknown[]
-      }).adsbygoogle = adsbygoogle
-      adsbygoogle.push({})
-    } catch {
-      // AdSense may throw if the slot is not ready yet; ignore safely.
+    const gw = globalThis as typeof globalThis & { adsbygoogle?: unknown[] }
+    const adsbygoogle = gw.adsbygoogle || []
+    gw.adsbygoogle = adsbygoogle
+
+    const element = insRef.current
+    if (element && globalThis.window) {
+      const hostname = globalThis.window.location.hostname
+      const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname.endsWith('.local')
+      if (isLocal || ADSENSE_TEST_MODE === 'on') {
+        element.dataset.adtest = 'on'
+      }
+    }
+
+    if (typeof (adsbygoogle as any).push === 'function') {
+      didPushRef.current = true
+      ;(adsbygoogle as any).push({})
     }
   }, [])
 
@@ -33,6 +43,7 @@ export function BannerAd() {
       <div className="w-full px-4" style={{ maxWidth: '980px' }}>
         {ADSENSE_BANNER_SLOT_ID ? (
           <ins
+            ref={insRef}
             className="adsbygoogle block min-h-16 w-full"
             style={{ display: 'block' }}
             data-ad-client={ADSENSE_CLIENT_ID}

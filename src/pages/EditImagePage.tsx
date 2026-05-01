@@ -4,7 +4,6 @@ import { CanvasStage } from '../components/editor/CanvasStage'
 import { LeftToolbar } from '../components/editor/LeftToolbar'
 import { RightPropertiesPanel } from '../components/editor/RightPropertiesPanel'
 import { TopBar } from '../components/editor/TopBar'
-import BannerAd from '../components/BannerAd'
 import VideoAdModal from '../components/VideoAdModal'
 import { canShowVideoAd, markVideoAdShown } from '../utils/adHelpers'
 import { useEditorStore } from '../stores/editorStore'
@@ -24,14 +23,14 @@ export function EditImagePage() {
 
   useEffect(() => {
     const savedTheme = localStorage.getItem(THEME_KEY)
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const systemDark = globalThis.window.matchMedia('(prefers-color-scheme: dark)').matches
     const nextDark = savedTheme ? savedTheme === 'dark' : systemDark
     document.documentElement.classList.toggle('dark', nextDark)
   }, [])
 
   useEffect(() => {
     const stored = loadStoredImageState()
-    if (!stored || !stored.originalDataUrl) {
+    if (!stored?.originalDataUrl) {
       navigate('/')
       return
     }
@@ -102,7 +101,6 @@ export function EditImagePage() {
   return (
     <div className="min-h-screen bg-[#f8f7ff] text-[#12101d] dark:bg-[#0d111b] dark:text-[#f3f4ff]">
       <TopBar onExport={handleExport} onDownload={handleDownload} status={status} setStatus={setStatus} />
-      <BannerAd />
 
       <main className="app-container section-gap">
         <div className="grid gap-4 lg:grid-cols-[240px_1fr_320px]">
