@@ -70,8 +70,8 @@ This project is configured for Vercel with:
 1. Push this repository to GitHub/GitLab/Bitbucket.
 2. Import the project in Vercel.
 3. In Project Settings → Environment Variables, add:
-	- `BLOB_READ_WRITE_TOKEN` (required for `/api/upload` and `/api/resize`)
-	- `DATABASE_URL` (optional)
+   - `BLOB_READ_WRITE_TOKEN` (required for `/api/upload` and `/api/resize`)
+   - `DATABASE_URL` (optional)
 4. Deploy.
 
 ### Option 2: Vercel CLI
@@ -94,3 +94,32 @@ vercel env add DATABASE_URL
 - Add Neon Postgres for history
 - Persist resize jobs and metadata
 - Add user accounts and saved workflows
+
+## SEO Prompt Template
+
+Use this prompt when you want to generate optimized metadata for a new tool page:
+
+```text
+Act as an expert SEO strategist and SaaS growth specialist.
+
+I have a web tool: [INSERT TOOL NAME + FUNCTION]
+
+Generate complete on-page SEO including:
+
+1. High-CTR SEO title (under 60 characters)
+2. Conversion-focused meta description (under 160 characters)
+3. 20+ keywords (mix of short-tail and long-tail)
+4. H1 heading (keyword optimized)
+5. Intro paragraph (SEO + user-friendly)
+6. 3 SEO sections (with H2 headings)
+7. FAQ section (5 questions + answers)
+8. Internal linking suggestions
+9. Image alt text examples
+10. Structured data (Schema markup)
+
+Target audience: [e.g., bloggers, ecommerce, developers]
+Primary keyword: [INSERT]
+Tone: clear, simple, conversion-focused, SEO optimized.
+
+Avoid keyword stuffing but ensure strong keyword placement.
+```
